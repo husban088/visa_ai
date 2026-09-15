@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+:root {
+  /* Base palette -- white body throughout, with a black → red gradient
+     as the brand accent (badges, buttons, borders, hero flourish). */
+  --ink: #ffffff;
+  --ink-2: #f7f5f5;
+  --ink-3: #e9e3e3;
+  --paper: #fbf4f4;
+  --paper-2: #f3e6e6;
+  --gold: #d21f1f;
+  --gold-bright: #ef4444;
+  --steel: #5b5150;
+  --mist: #78706e;
+  --ink-text: #171010;
+
+  --background: var(--ink);
+  --foreground: #120c0c;
+
+  /* Brand gradient: black to red, used for hero/CTA flourishes. */
+  --gradient-brand: linear-gradient(135deg, #000000 0%, #7f0f0f 45%, #d21f1f 100%);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-steel: var(--steel);
+  --color-mist: var(--mist);
+  --color-ink-text: var(--ink-text);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+}
+
+.bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+
+.text-gradient-brand {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.border-gradient-brand {
+  border-image: var(--gradient-brand) 1;
+}
+
+* {
+  scrollbar-color: var(--gold) var(--ink-2);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+}
+
+.perforated-left {
+  position: relative;
+}
+.perforated-left::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 6px,
+    var(--steel) 6px,
+    var(--steel) 12px
+  );
+  background-size: 1px 16px;
+  opacity: 0.5;
+}
+
+.stamp-ring {
+  border: 1.5px solid currentColor;
+  border-radius: 9999px;
+  position: relative;
+}
+.stamp-ring::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed currentColor;
+  border-radius: 9999px;
+  opacity: 0.55;
+}
+
+.flap {
+  display: inline-block;
+  background: var(--ink-2);
+  border: 1px solid var(--ink-3);
+  border-radius: 4px;
+}
+
+@keyframes drift {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1.2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+.animate-drift {
+  animation: drift 7s ease-in-out infinite;
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: 0; }
+}
+.route-line {
+  stroke-dasharray: 6 8;
+  stroke-dashoffset: 400;
+  animation: dash 2.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Text fields draw their own focus treatment (border-gold on the wrapper),
+   so skip the site-wide ring here to avoid a double/red box on inputs. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
