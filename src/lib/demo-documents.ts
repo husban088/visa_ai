@@ -1,6 +1,8 @@
 "use client";
 
 import { jsPDF } from "jspdf";
+import type { OfferLetter } from "@/lib/offers";
+import { buildOfferPdf } from "@/lib/offer-pdf";
 
 /**
  * Generates fully synthetic, clearly-labeled sample documents client-side.
@@ -42,7 +44,11 @@ function pad(n: number, len: number) {
 }
 
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 // ---- shared page chrome: header, watermark, footer disclaimer ----
@@ -54,7 +60,11 @@ function addChrome(doc: jsPDF, title: string) {
   doc.saveGraphicsState();
   try {
     // GState opacity — supported by jsPDF; wrapped in try in case of version drift
-    doc.setGState(new (jsPDF as unknown as { GState: new (o: object) => unknown }).GState({ opacity: 0.12 }));
+    doc.setGState(
+      new (jsPDF as unknown as { GState: new (o: object) => unknown }).GState({
+        opacity: 0.12,
+      }),
+    );
   } catch {
     /* older jsPDF without GState — watermark still shows via light gray text */
   }
@@ -80,7 +90,7 @@ function addChrome(doc: jsPDF, title: string) {
     "This is a synthetically generated demo file for the VisaAI portfolio project — no real personal, financial, or government data. Not valid for any official use.",
     w / 2,
     h - 8,
-    { align: "center", maxWidth: w - 20 }
+    { align: "center", maxWidth: w - 20 },
   );
 
   doc.setTextColor(20, 20, 20);
@@ -91,6 +101,19 @@ interface GenCtx {
   countryName: string;
   visaTypeName: string;
   rand: () => number;
+  /** Accepted company offer — used so the documents carry the real job details. */
+  offer?: OfferLetter;
+}
+
+function offerContractText(ctx: GenCtx): string {
+  const o = ctx.offer!;
+  return (
+    `This agreement is entered into between ${o.companyName} (${o.companyLocation}) and ${ctx.fullName} ` +
+    `for the role of ${o.jobTitle} (${o.employmentType}, ${o.workMode}) in ${o.city ? o.city + ", " : ""}${o.countryName}, ` +
+    `starting ${new Date(o.startDate).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}. ` +
+    `Compensation: ${o.salary}. Probation period: ${o.probationMonths} months. Linked offer reference: ${o.id}. ` +
+    `This document is fabricated by AI for demonstration only.`
+  );
 }
 
 function passportDoc(ctx: GenCtx): jsPDF {
@@ -99,7 +122,11 @@ function passportDoc(ctx: GenCtx): jsPDF {
   const { fullName, rand } = ctx;
   const [given, ...rest] = fullName.split(" ");
   const surname = rest.length ? rest[rest.length - 1] : "APPLICANT";
-  const dob = new Date(1985 + Math.floor(rand() * 15), Math.floor(rand() * 12), 1 + Math.floor(rand() * 27));
+  const dob = new Date(
+    1985 + Math.floor(rand() * 15),
+    Math.floor(rand() * 12),
+    1 + Math.floor(rand() * 27),
+  );
   const issue = new Date(2022, 0, 1);
   const expiry = new Date(2032, 0, 1);
   const num = `P${pad(rand() * 1e7, 7)}`;
@@ -163,7 +190,14 @@ function bankStatementDoc(ctx: GenCtx): jsPDF {
   doc.setDrawColor(200);
   doc.line(14, y - 4, 196, y - 4);
 
-  const descriptions = ["Salary credit", "Rent payment", "Utility bill", "Grocery spend", "Transfer in", "ATM withdrawal"];
+  const descriptions = [
+    "Salary credit",
+    "Rent payment",
+    "Utility bill",
+    "Grocery spend",
+    "Transfer in",
+    "ATM withdrawal",
+  ];
   const today = new Date();
   for (let i = 0; i < 8; i++) {
     const d = new Date(today);
@@ -187,7 +221,12 @@ function bankStatementDoc(ctx: GenCtx): jsPDF {
 function offerLetterDoc(ctx: GenCtx): jsPDF {
   const doc = new jsPDF();
   const isWork = /work|employment/i.test(ctx.visaTypeName);
-  addChrome(doc, isWork ? "Employment Offer Letter (Sample)" : "Admission Offer Letter (Sample)");
+  addChrome(
+    doc,
+    isWork
+      ? "Employment Offer Letter (Sample)"
+      : "Admission Offer Letter (Sample)",
+  );
   const { fullName, countryName, rand } = ctx;
   const date = new Date();
   let y = 34;
@@ -213,7 +252,11 @@ function offerLetterDoc(ctx: GenCtx): jsPDF {
   y += lines.length * 6 + 14;
   doc.text("Sincerely,", 14, y);
   y += 8;
-  doc.text(isWork ? "Demo Corp HR Team" : "Demo University Admissions Office", 14, y);
+  doc.text(
+    isWork ? "Demo Corp HR Team" : "Demo University Admissions Office",
+    14,
+    y,
+  );
   return doc;
 }
 
@@ -237,7 +280,14 @@ function transcriptDoc(ctx: GenCtx): jsPDF {
   y += 6;
   doc.line(14, y - 4, 196, y - 4);
 
-  const courses = ["Mathematics", "Computer Science", "Physics", "English Composition", "Statistics", "Economics"];
+  const courses = [
+    "Mathematics",
+    "Computer Science",
+    "Physics",
+    "English Composition",
+    "Statistics",
+    "Economics",
+  ];
   const grades = ["A", "A-", "B+", "B", "A"];
   courses.forEach((c) => {
     doc.text(c, 14, y);
@@ -254,7 +304,11 @@ function marriageCertDoc(ctx: GenCtx): jsPDF {
   const doc = new jsPDF();
   addChrome(doc, "Marriage Certificate (Sample)");
   const { fullName, rand } = ctx;
-  const date = new Date(2015 + Math.floor(rand() * 8), Math.floor(rand() * 12), 1 + Math.floor(rand() * 27));
+  const date = new Date(
+    2015 + Math.floor(rand() * 8),
+    Math.floor(rand() * 12),
+    1 + Math.floor(rand() * 27),
+  );
   let y = 40;
   doc.setFontSize(14);
   doc.text("CERTIFICATE OF MARRIAGE — SPECIMEN", 105, y, { align: "center" });
@@ -262,7 +316,11 @@ function marriageCertDoc(ctx: GenCtx): jsPDF {
   doc.setFontSize(10);
   doc.text(`This is to certify that ${fullName}`, 14, y);
   y += 8;
-  doc.text(`and Demo Spouse Name were lawfully married on ${fmtDate(date)}.`, 14, y);
+  doc.text(
+    `and Demo Spouse Name were lawfully married on ${fmtDate(date)}.`,
+    14,
+    y,
+  );
   y += 8;
   doc.text(`Registration No.: MC-${pad(rand() * 1e6, 6)}`, 14, y);
   return doc;
@@ -277,9 +335,17 @@ function residencyProofDoc(ctx: GenCtx): jsPDF {
   doc.text("Residency / Citizenship Confirmation — Specimen", 14, y);
   y += 12;
   doc.setFontSize(10);
-  doc.text(`This confirms Demo Spouse Name holds legal residency status in ${countryName},`, 14, y);
+  doc.text(
+    `This confirms Demo Spouse Name holds legal residency status in ${countryName},`,
+    14,
+    y,
+  );
   y += 8;
-  doc.text(`under permit number RS-${pad(rand() * 1e6, 6)}, valid through 2030.`, 14, y);
+  doc.text(
+    `under permit number RS-${pad(rand() * 1e6, 6)}, valid through 2030.`,
+    14,
+    y,
+  );
   return doc;
 }
 
@@ -309,10 +375,11 @@ function employmentContractDoc(ctx: GenCtx): jsPDF {
   doc.text("Employment Contract — Specimen", 14, y);
   y += 12;
   doc.setFontSize(10);
-  const body =
-    `This agreement is entered into between Demo Corp (${countryName}) and ${fullName} for the role of ` +
-    `Software Engineer, effective from the visa approval date. Annual compensation: ${25000 + Math.floor(rand() * 35000)} ` +
-    `(demo currency units). Contract term: 2 years, renewable. This document is fabricated for demonstration only.`;
+  const body = ctx.offer
+    ? offerContractText(ctx)
+    : `This agreement is entered into between Demo Corp (${countryName}) and ${fullName} for the role of ` +
+      `Software Engineer, effective from the visa approval date. Annual compensation: ${25000 + Math.floor(rand() * 35000)} ` +
+      `(demo currency units). Contract term: 2 years, renewable. This document is fabricated for demonstration only.`;
   doc.text(doc.splitTextToSize(body, 180), 14, y);
   return doc;
 }
@@ -326,12 +393,19 @@ function certificateDoc(ctx: GenCtx): jsPDF {
   doc.text("CERTIFICATE OF COMPLETION — SPECIMEN", 105, y, { align: "center" });
   y += 16;
   doc.setFontSize(11);
-  doc.text(`This certifies that ${fullName} has completed the required`, 105, y, { align: "center" });
+  doc.text(
+    `This certifies that ${fullName} has completed the required`,
+    105,
+    y,
+    { align: "center" },
+  );
   y += 8;
   doc.text("training / trade program (demo).", 105, y, { align: "center" });
   y += 12;
   doc.setFontSize(9);
-  doc.text(`Certificate No.: EDU-${pad(rand() * 1e6, 6)}`, 105, y, { align: "center" });
+  doc.text(`Certificate No.: EDU-${pad(rand() * 1e6, 6)}`, 105, y, {
+    align: "center",
+  });
   return doc;
 }
 
@@ -344,9 +418,17 @@ function policeClearanceDoc(ctx: GenCtx): jsPDF {
   doc.text("Police Clearance Certificate — Specimen", 14, y);
   y += 12;
   doc.setFontSize(10);
-  doc.text(`This certifies that ${fullName} has no record of criminal conviction`, 14, y);
+  doc.text(
+    `This certifies that ${fullName} has no record of criminal conviction`,
+    14,
+    y,
+  );
   y += 8;
-  doc.text(`on file, as of the date of issue. Reference No.: PCC-${pad(rand() * 1e6, 6)}.`, 14, y);
+  doc.text(
+    `on file, as of the date of issue. Reference No.: PCC-${pad(rand() * 1e6, 6)}.`,
+    14,
+    y,
+  );
   return doc;
 }
 
@@ -365,9 +447,17 @@ function flightIntentDoc(ctx: GenCtx): jsPDF {
   doc.setFontSize(10);
   doc.text(`Passenger: ${fullName}`, 14, y);
   y += 8;
-  doc.text(`Outbound: ${fmtDate(dep)} → ${countryName}, Flight DM${100 + Math.floor(rand() * 800)}`, 14, y);
+  doc.text(
+    `Outbound: ${fmtDate(dep)} → ${countryName}, Flight DM${100 + Math.floor(rand() * 800)}`,
+    14,
+    y,
+  );
   y += 8;
-  doc.text(`Return: ${fmtDate(ret)} → Home Country, Flight DM${100 + Math.floor(rand() * 800)}`, 14, y);
+  doc.text(
+    `Return: ${fmtDate(ret)} → Home Country, Flight DM${100 + Math.floor(rand() * 800)}`,
+    14,
+    y,
+  );
   return doc;
 }
 
@@ -399,7 +489,11 @@ function genericDoc(ctx: GenCtx, label: string): jsPDF {
   doc.setFontSize(10);
   doc.text(`Prepared for: ${fullName}`, 14, y);
   y += 8;
-  doc.text("This is a synthetic placeholder generated to demonstrate the upload step.", 14, y);
+  doc.text(
+    "This is a synthetic placeholder generated to demonstrate the upload step.",
+    14,
+    y,
+  );
   return doc;
 }
 
@@ -408,15 +502,20 @@ function buildDoc(label: string, ctx: GenCtx): jsPDF {
   if (l.includes("passport")) return passportDoc(ctx);
   if (l.includes("bank statement")) return bankStatementDoc(ctx);
   if (l.includes("employment contract")) return employmentContractDoc(ctx);
-  if (l.includes("admission") || l.includes("offer letter")) return offerLetterDoc(ctx);
+  if (l.includes("admission") || l.includes("offer letter"))
+    return offerLetterDoc(ctx);
   if (l.includes("transcript")) return transcriptDoc(ctx);
   if (l.includes("marriage certificate")) return marriageCertDoc(ctx);
-  if (l.includes("residency") || l.includes("citizenship")) return residencyProofDoc(ctx);
-  if (l.includes("photograph") || l.includes("correspondence")) return relationshipEvidenceDoc(ctx);
-  if (l.includes("trade certificate") || l.includes("educational")) return certificateDoc(ctx);
+  if (l.includes("residency") || l.includes("citizenship"))
+    return residencyProofDoc(ctx);
+  if (l.includes("photograph") || l.includes("correspondence"))
+    return relationshipEvidenceDoc(ctx);
+  if (l.includes("trade certificate") || l.includes("educational"))
+    return certificateDoc(ctx);
   if (l.includes("police clearance")) return policeClearanceDoc(ctx);
   if (l.includes("return flight")) return flightIntentDoc(ctx);
-  if (l.includes("hotel") || l.includes("invitation")) return hotelBookingDoc(ctx);
+  if (l.includes("hotel") || l.includes("invitation"))
+    return hotelBookingDoc(ctx);
   return genericDoc(ctx, label);
 }
 
@@ -428,11 +527,22 @@ export function generateDemoDocument(
   label: string,
   fullName: string,
   countryName: string,
-  visaTypeName: string
+  visaTypeName: string,
+  offer?: OfferLetter,
 ): DemoDocResult {
   const rand = mulberry32(seedFromString(`${fullName}::${label}`));
-  const doc = buildDoc(label, { fullName, countryName, visaTypeName, rand });
-  const blob = doc.output("blob");
   const safeLabel = label.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  // The company offer letter is the same luxury letter the applicant received.
+  if (offer && /offer letter/i.test(label) && !/contract/i.test(label)) {
+    return { blob: buildOfferPdf(offer), fileName: `${safeLabel}.pdf` };
+  }
+  const doc = buildDoc(label, {
+    fullName,
+    countryName,
+    visaTypeName,
+    rand,
+    offer,
+  });
+  const blob = doc.output("blob");
   return { blob, fileName: `sample-${safeLabel}.pdf` };
 }

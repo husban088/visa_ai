@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MapPin, Pencil } from "lucide-react";
 import { RESIDENCE_COUNTRIES } from "@/lib/geo";
+import { Flag } from "./Flag";
 import { useResidenceCountry } from "@/lib/use-residence-country";
 
 /**
@@ -42,7 +43,7 @@ export function ResidenceCountryPicker({
           </option>
           {RESIDENCE_COUNTRIES.map((c) => (
             <option key={c.code} value={c.code}>
-              {c.flag} {c.name}
+              {c.name}
             </option>
           ))}
         </select>
@@ -56,8 +57,10 @@ export function ResidenceCountryPicker({
           onClick={() => setEditing(true)}
           className="mt-3 flex items-center gap-3 rounded-xl border border-ink-3 bg-ink-2/40 px-4 py-3 text-left transition-colors hover:border-steel"
         >
-          <span className="text-xl">{country.flag}</span>
-          <span className="text-sm text-[var(--foreground)]">{country.name}</span>
+          <Flag code={country.code} className="h-5 w-7" />
+          <span className="text-sm text-[var(--foreground)]">
+            {country.name}
+          </span>
           {country.source === "ip" && (
             <span className="rounded-full border border-ink-3 px-2 py-0.5 text-[10px] text-steel">
               detected

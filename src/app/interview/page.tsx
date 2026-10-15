@@ -5,17 +5,27 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CameraPreview } from "@/components/CameraPreview";
-import { InterviewRecorder, InterviewRecorderHandle } from "@/components/InterviewRecorder";
+import {
+  InterviewRecorder,
+  InterviewRecorderHandle,
+} from "@/components/InterviewRecorder";
 import { VoiceInterview } from "@/components/VoiceInterview";
 import { getApplication, updateApplication } from "@/lib/store";
 import { getQuestions, scoreInterview } from "@/lib/interview";
+import { getOfferByVisaApplication } from "@/lib/offers";
 import { getCountry } from "@/lib/countries";
 import { getVisaType } from "@/lib/visa-types";
 import { useFocusGuard } from "@/lib/use-focus-guard";
 import { isVoiceInterviewSupported } from "@/lib/use-speech";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { Application } from "@/types";
-import { AlertTriangle, ShieldAlert, ArrowRight, Mic, Keyboard } from "lucide-react";
+import {
+  AlertTriangle,
+  ShieldAlert,
+  ArrowRight,
+  Mic,
+  Keyboard,
+} from "lucide-react";
 
 type Stage = "loading" | "gate" | "interview" | "scoring";
 type InterviewMode = "voice" | "typed";
@@ -30,10 +40,13 @@ export default function InterviewPage() {
   const [qIndex, setQIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
-  const [scoringNote, setScoringNote] = useState("Reviewing your answers against your application…");
+  const [scoringNote, setScoringNote] = useState(
+    "Reviewing your answers against your application…",
+  );
   const recorderRef = useRef<InterviewRecorderHandle>(null);
 
-  const { violations, disqualified, disqualifyReason, flagPaste } = useFocusGuard(stage === "interview");
+  const { violations, disqualified, disqualifyReason, flagPaste } =
+    useFocusGuard(stage === "interview");
 
   useEffect(() => {
     // Feature detection only works client-side; this one-time check can't
@@ -58,7 +71,20 @@ export default function InterviewPage() {
     });
   }, [router]);
 
-  const questions = useMemo(() => (app ? getQuestions(app.visaType) : []), [app]);
+  const questions = useMemo(() => {
+    if (!app) return [];
+    const offer = getOfferByVisaApplication(app.id);
+    return getQuestions(
+      app.visaType,
+      offer
+        ? {
+            role: offer.jobTitle,
+            company: offer.companyName,
+            country: offer.countryName,
+          }
+        : undefined,
+    );
+  }, [app]);
 
   useEffect(() => {
     if (disqualified && app) {
@@ -66,7 +92,8 @@ export default function InterviewPage() {
       updateApplication(app.id, {
         status: "rejected",
         decisionReason:
-          disqualifyReason ?? "Interview session was flagged for a fairness violation.",
+          disqualifyReason ??
+          "Interview session was flagged for a fairness violation.",
       }).then(() => router.push("/dashboard"));
     }
   }, [disqualified, disqualifyReason, app, router]);
@@ -99,7 +126,11 @@ export default function InterviewPage() {
       const clip = await recorderRef.current?.stop();
       if (clip && clip.size > 0) {
         setScoringNote("Saving your interview recording…");
-        const { url } = await uploadToCloudinary(clip, undefined, "visaai/interviews");
+        const { url } = await uploadToCloudinary(
+          clip,
+          undefined,
+          "visaai/interviews",
+        );
         interviewVideoUrl = url;
       }
     } catch {
@@ -143,12 +174,23 @@ export default function InterviewPage() {
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-gold/30 bg-gold/5 p-5">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
               <div className="text-sm text-gold-bright">
-                <p className="font-medium">This interview must be you, alone, answering honestly.</p>
+                <p className="font-medium">
+                  This interview must be you, alone, answering honestly.
+                </p>
                 <ul className="mt-2 list-disc space-y-1 pl-4 text-gold-bright/90">
-                  <li>Do not use ChatGPT, Claude, or any other AI tool to generate answers.</li>
+                  <li>
+                    Do not use ChatGPT, Claude, or any other AI tool to generate
+                    answers.
+                  </li>
                   <li>Do not have someone else answer on your behalf.</li>
-                  <li>Stay on this tab for the full interview — switching away twice ends the session as a rejection.</li>
-                  <li>Pasting text into an answer — voice or typed — is detected instantly and ends the session too.</li>
+                  <li>
+                    Stay on this tab for the full interview — switching away
+                    twice ends the session as a rejection.
+                  </li>
+                  <li>
+                    Pasting text into an answer — voice or typed — is detected
+                    instantly and ends the session too.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -164,7 +206,8 @@ export default function InterviewPage() {
                 onChange={(e) => setAgreed(e.target.checked)}
                 className="mt-1 h-4 w-4 accent-[var(--gold)]"
               />
-              I understand the rules above and confirm I&apos;ll answer this interview myself.
+              I understand the rules above and confirm I&apos;ll answer this
+              interview myself.
             </label>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -178,7 +221,8 @@ export default function InterviewPage() {
                   <ArrowRight className="h-4 w-4 text-steel transition-transform group-hover:translate-x-0.5" />
                 </span>
                 <span className="text-xs text-mist">
-                  The AI asks each question out loud and listens to you answer, live.
+                  The AI asks each question out loud and listens to you answer,
+                  live.
                 </span>
               </button>
 
@@ -191,13 +235,16 @@ export default function InterviewPage() {
                   <Keyboard className="h-4 w-4 text-gold" /> Typed interview
                   <ArrowRight className="h-4 w-4 text-steel transition-transform group-hover:translate-x-0.5" />
                 </span>
-                <span className="text-xs text-mist">Type your answers instead of speaking.</span>
+                <span className="text-xs text-mist">
+                  Type your answers instead of speaking.
+                </span>
               </button>
             </div>
             {!voiceSupported && (
               <p className="mt-3 text-xs text-steel">
-                Voice interview needs a Chromium browser (Chrome or Edge) on desktop — not available in
-                this browser, so typed is the only option here.
+                Voice interview needs a Chromium browser (Chrome or Edge) on
+                desktop — not available in this browser, so typed is the only
+                option here.
               </p>
             )}
           </div>
@@ -209,13 +256,17 @@ export default function InterviewPage() {
               {violations > 0 && (
                 <span className="flex items-center gap-1.5 text-xs text-red-400">
                   <AlertTriangle className="h-3.5 w-3.5" />
-                  Fairness warning — {violations} violation{violations > 1 ? "s" : ""}
+                  Fairness warning — {violations} violation
+                  {violations > 1 ? "s" : ""}
                 </span>
               )}
             </div>
 
             <div className="mt-2 grid gap-6 md:grid-cols-[1fr_1.1fr]">
-              <InterviewRecorder ref={recorderRef} active={stage === "interview"} />
+              <InterviewRecorder
+                ref={recorderRef}
+                active={stage === "interview"}
+              />
 
               {mode === "voice" ? (
                 <VoiceInterview
@@ -249,7 +300,9 @@ export default function InterviewPage() {
                     disabled={answer.trim().length < 3}
                     className="mt-4 rounded-full bg-gradient-brand px-6 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {qIndex + 1 < questions.length ? "Next question" : "Finish interview"}
+                    {qIndex + 1 < questions.length
+                      ? "Next question"
+                      : "Finish interview"}
                   </button>
                 </div>
               )}

@@ -8,12 +8,14 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { DocumentDownloader, ReadyDoc } from "@/components/DocumentDownloader";
 import { getVisaType } from "@/lib/visa-types";
 import { getCountry } from "@/lib/countries";
+import { getOffer } from "@/lib/offers";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Draft {
   countryCode: string;
   visaType: string;
   fullName: string;
+  offerId?: string;
 }
 
 export default function DocumentsPage() {
@@ -35,7 +37,10 @@ export default function DocumentsPage() {
 
   const visaType = getVisaType(draft.visaType);
   const country = getCountry(draft.countryCode);
-  const allDone = visaType ? ready.length >= visaType.requiredDocuments.length : false;
+  const offer = draft.offerId ? getOffer(draft.offerId) : undefined;
+  const allDone = visaType
+    ? ready.length >= visaType.requiredDocuments.length
+    : false;
 
   function handleContinue() {
     sessionStorage.setItem("visaai_documents", JSON.stringify(ready));
@@ -52,10 +57,12 @@ export default function DocumentsPage() {
           Your documents
         </h1>
         <p className="mt-3 text-sm text-mist">
-          For a {visaType?.name.toLowerCase()} to {country?.name}. There&apos;s nothing to
-          upload — VisaAI has already AI-generated clearly-watermarked sample documents for{" "}
-          {draft.fullName} below, and they&apos;re auto-cleared. Download any of them for
-          your own records; your interview is what actually decides this application.
+          For your {visaType?.name.toLowerCase()} to {country?.name}
+          {offer ? ` (${offer.jobTitle} at ${offer.companyName})` : ""}.
+          There&apos;s nothing to upload — your company offer letter is attached
+          automatically and the AI has created and uploaded the other demo
+          documents for {draft.fullName}. Download any of them for your own
+          records; your interview is what actually decides this visa.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -66,8 +73,12 @@ export default function DocumentsPage() {
               fullName={draft.fullName}
               countryName={country?.name}
               visaTypeName={visaType?.name}
+              offer={offer}
               onReady={(d) =>
-                setReady((prev) => [...prev.filter((p) => p.name !== d.name), d])
+                setReady((prev) => [
+                  ...prev.filter((p) => p.name !== d.name),
+                  d,
+                ])
               }
             />
           ))}

@@ -1,6 +1,7 @@
 import { Country } from "@/types";
+import { countryName as isoCountryName, flagEmoji } from "@/lib/geo";
 
-export const countries: Country[] = [
+const baseCountries: Country[] = [
   {
     code: "CA",
     name: "Canada",
@@ -105,8 +106,273 @@ export const countries: Country[] = [
   },
 ];
 
+type Landmark = Country["landmark"];
+
+function make(
+  code: string,
+  name: string,
+  region: string,
+  landmark: Landmark,
+  airportCode: string,
+  airportName: string,
+  avgProcessingDays: number,
+  embassyFeeUSD: number,
+  baseFlightPriceUSD: number,
+  baseFlightDurationHours: number,
+  seatsOpenToday: number,
+): Country {
+  return {
+    code,
+    name,
+    region,
+    flag: flagEmoji(code),
+    landmark,
+    airportCode,
+    airportName,
+    avgProcessingDays,
+    visaTypesOffered: ["study", "married", "visit", "work"],
+    seatsOpenToday,
+    embassyFeeUSD,
+    baseFlightPriceUSD,
+    baseFlightDurationHours,
+  };
+}
+
+/**
+ * More destinations (no photo yet -> a clean landmark illustration is shown).
+ * To add a photo later, set `heroImageUrl` on the entry.
+ */
+const extraCountries: Country[] = [
+  make(
+    "US",
+    "United States",
+    "North America",
+    "cntower",
+    "JFK",
+    "New York JFK",
+    2,
+    185,
+    1100,
+    15,
+    48,
+  ),
+  make(
+    "NL",
+    "Netherlands",
+    "Europe",
+    "gate",
+    "AMS",
+    "Amsterdam Schiphol",
+    2,
+    90,
+    640,
+    8,
+    26,
+  ),
+  make(
+    "SE",
+    "Sweden",
+    "Europe",
+    "gate",
+    "ARN",
+    "Stockholm Arlanda",
+    2,
+    95,
+    680,
+    9,
+    22,
+  ),
+  make(
+    "CH",
+    "Switzerland",
+    "Europe",
+    "gate",
+    "ZRH",
+    "Zurich Airport",
+    2,
+    95,
+    700,
+    8.5,
+    18,
+  ),
+  make(
+    "IE",
+    "Ireland",
+    "Europe",
+    "bigben",
+    "DUB",
+    "Dublin Airport",
+    2,
+    100,
+    660,
+    9,
+    21,
+  ),
+  make(
+    "IT",
+    "Italy",
+    "Europe",
+    "eiffel",
+    "FCO",
+    "Rome Fiumicino",
+    2,
+    95,
+    610,
+    8,
+    27,
+  ),
+  make(
+    "ES",
+    "Spain",
+    "Europe",
+    "eiffel",
+    "MAD",
+    "Madrid Barajas",
+    2,
+    90,
+    600,
+    8.5,
+    30,
+  ),
+  make(
+    "NO",
+    "Norway",
+    "Europe",
+    "gate",
+    "OSL",
+    "Oslo Gardermoen",
+    2,
+    100,
+    720,
+    9.5,
+    17,
+  ),
+  make(
+    "NZ",
+    "New Zealand",
+    "Oceania",
+    "opera",
+    "AKL",
+    "Auckland Airport",
+    2,
+    150,
+    1200,
+    17,
+    19,
+  ),
+  make(
+    "SG",
+    "Singapore",
+    "Asia",
+    "opera",
+    "SIN",
+    "Singapore Changi",
+    1,
+    80,
+    520,
+    6.5,
+    33,
+  ),
+  make(
+    "MY",
+    "Malaysia",
+    "Asia",
+    "opera",
+    "KUL",
+    "Kuala Lumpur Intl",
+    1,
+    70,
+    430,
+    6,
+    36,
+  ),
+  make(
+    "JP",
+    "Japan",
+    "Asia",
+    "opera",
+    "NRT",
+    "Tokyo Narita",
+    2,
+    95,
+    900,
+    11,
+    25,
+  ),
+  make(
+    "SA",
+    "Saudi Arabia",
+    "Middle East",
+    "burj",
+    "RUH",
+    "Riyadh King Khalid",
+    1,
+    90,
+    300,
+    4,
+    44,
+  ),
+  make(
+    "QA",
+    "Qatar",
+    "Middle East",
+    "burj",
+    "DOH",
+    "Doha Hamad Intl",
+    1,
+    85,
+    290,
+    4,
+    40,
+  ),
+  make(
+    "TR",
+    "Turkey",
+    "Europe",
+    "gate",
+    "IST",
+    "Istanbul Airport",
+    1,
+    75,
+    420,
+    6,
+    38,
+  ),
+];
+
+export const countries: Country[] = [...baseCountries, ...extraCountries];
+
+/** Main airport for countries that are not in the featured list above. */
+const HUBS =
+  "FI:HEL,DK:CPH,BE:BRU,AT:VIE,PL:WAW,PT:LIS,GR:ATH,CZ:PRG,HU:BUD,KR:ICN,TH:BKK,HK:HKG,CN:PEK,ZA:JNB,EG:CAI,KE:NBO,BR:GRU,MX:MEX,AR:EZE,KW:KWI,BH:BAH,OM:MCT,IN:DEL,ID:CGK,VN:SGN,PH:MNL,LU:LUX,HR:ZAG,RO:OTP,EE:TLL,LV:RIX,LT:VNO,IS:KEF,CL:SCL,CO:BOG,PE:LIM,MA:CMN,NG:LOS,GH:ACC,LK:CMB,BD:DAC,NP:KTM,JO:AMM,IL:TLV,UA:KBP,RU:SVO,BG:SOF,RS:BEG,SK:BTS,SI:LJU,MT:MLA,CY:LCA";
+
+const hubMap: Record<string, string> = Object.fromEntries(
+  HUBS.split(",").map((p) => p.split(":") as [string, string]),
+);
+
+/**
+ * Any country a company can post a job in works for the visa process:
+ * featured ones come from the list above, every other one is built here.
+ */
 export function getCountry(code: string): Country | undefined {
-  return countries.find((c) => c.code === code);
+  const upper = (code || "").toUpperCase();
+  const found = countries.find((c) => c.code === upper);
+  if (found) return found;
+  if (!/^[A-Z]{2}$/.test(upper)) return undefined;
+  const name = isoCountryName(upper);
+  return make(
+    upper,
+    name,
+    "Worldwide",
+    "gate",
+    hubMap[upper] ?? "DXB",
+    hubMap[upper] ? `${name} main airport` : "Nearest international hub",
+    2,
+    100,
+    800,
+    10,
+    20,
+  );
 }
 
 /** Departure airports offered by the booking flow (applicant side). */

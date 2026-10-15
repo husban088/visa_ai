@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { visaTypes } from "@/lib/visa-types";
-import { ArrowRight, GraduationCap, Heart, Plane, Briefcase, LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  GraduationCap,
+  Heart,
+  Plane,
+  Briefcase,
+  LucideIcon,
+} from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = {
   study: GraduationCap,
@@ -18,7 +25,9 @@ export function VisaTypesShowcase() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="max-w-lg">
-            <p className="text-xs uppercase tracking-wide text-gold">Visa types</p>
+            <p className="text-xs uppercase tracking-wide text-gold">
+              Visa types
+            </p>
             <h2 className="mt-3 font-display text-3xl md:text-4xl">
               Four reasons people travel, one process for all of them
             </h2>
@@ -34,7 +43,11 @@ export function VisaTypesShowcase() {
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                transition={{
+                  duration: 0.55,
+                  delay: i * 0.08,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-paper-2 bg-[#faf8f2] p-8 transition-all duration-500 ease-out will-change-transform hover:-translate-y-2 hover:border-gold/60 hover:bg-white hover:shadow-[0_25px_60px_-20px_rgba(210,31,31,0.28)]"
               >
                 {/* radial glow reveal */}
@@ -51,7 +64,9 @@ export function VisaTypesShowcase() {
                   <h3 className="relative mt-5 font-display text-xl transition-colors duration-500 group-hover:text-gold">
                     {v.name}
                   </h3>
-                  <p className="relative mt-2 text-sm text-ink-text/70">{v.tagline}</p>
+                  <p className="relative mt-2 text-sm text-ink-text/70">
+                    {v.tagline}
+                  </p>
                   <ul className="relative mt-5 space-y-1.5 text-sm text-ink-text/70">
                     {v.requiredDocuments.slice(0, 3).map((d) => (
                       <li key={d} className="flex items-center gap-2">
@@ -62,12 +77,15 @@ export function VisaTypesShowcase() {
                   </ul>
                 </div>
                 <div className="relative mt-8 flex items-center justify-between border-t border-paper-2 pt-5">
-                  <span className="text-xs text-steel">{v.avgDecisionTime}</span>
+                  <span className="text-xs text-steel">
+                    {v.avgDecisionTime}
+                  </span>
                   <Link
-                    href={`/apply?visaType=${v.id}`}
+                    href="/jobs"
                     className="inline-flex items-center gap-1 text-sm font-medium text-ink-text transition-colors group-hover:text-gold"
                   >
-                    Apply <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    Find a job{" "}
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
 

@@ -52,7 +52,8 @@ export const visaTypes: VisaType[] = [
     avgDecisionTime: "Within 24 hours",
     requiredDocuments: [
       "Passport (bio page)",
-      "Employment contract / offer letter",
+      "Company offer letter",
+      "Employment contract",
       "Educational or trade certificates",
       "Police clearance certificate",
     ],

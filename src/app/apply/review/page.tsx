@@ -7,7 +7,12 @@ import { Footer } from "@/components/Footer";
 import { StepIndicator } from "@/components/StepIndicator";
 import { getVisaType } from "@/lib/visa-types";
 import { getCountry } from "@/lib/countries";
-import { createApplication, nextInterviewSlot, updateApplication } from "@/lib/store";
+import {
+  createApplication,
+  nextInterviewSlot,
+  updateApplication,
+} from "@/lib/store";
+import { linkVisaApplication } from "@/lib/offers";
 import { Landmark } from "@/components/Landmarks";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +22,7 @@ interface Draft {
   countryCode: string;
   visaType: string;
   fullName: string;
+  offerId?: string;
 }
 
 export default function ReviewPage() {
@@ -52,13 +58,17 @@ export default function ReviewPage() {
         visaType: draft.visaType as never,
         fullName: draft.fullName,
       });
-      const documents = docs.map((d) => ({ ...d, uploadedAt: new Date().toISOString() }));
+      const documents = docs.map((d) => ({
+        ...d,
+        uploadedAt: new Date().toISOString(),
+      }));
       const slot = nextInterviewSlot();
       const finalApp = await updateApplication(app.id, {
         documents,
         status: "interview_scheduled",
         interviewSlot: slot,
       });
+      if (draft.offerId) linkVisaApplication(draft.offerId, app.id);
       sessionStorage.removeItem("visaai_draft");
       sessionStorage.removeItem("visaai_documents");
       if (finalApp) {
@@ -85,7 +95,9 @@ export default function ReviewPage() {
 
         <div className="mt-10 rounded-2xl border border-ink-3 bg-ink-2/50 p-6">
           <div className="flex items-center gap-3 border-b border-ink-3 pb-5">
-            {country && <Landmark id={country.landmark} className="h-9 w-9 text-gold" />}
+            {country && (
+              <Landmark id={country.landmark} className="h-9 w-9 text-gold" />
+            )}
             <div>
               <p className="text-[var(--foreground)]">{draft.fullName}</p>
               <p className="text-xs text-steel">
@@ -96,7 +108,10 @@ export default function ReviewPage() {
 
           <div className="mt-5 space-y-2">
             {docs.map((d) => (
-              <div key={d.name} className="flex items-center gap-2 text-sm text-mist">
+              <div
+                key={d.name}
+                className="flex items-center gap-2 text-sm text-mist"
+              >
                 <CheckCircle2 className="h-4 w-4 text-gold" />
                 {d.name}
               </div>
@@ -105,19 +120,21 @@ export default function ReviewPage() {
         </div>
 
         <div className="mt-6 rounded-xl border border-gold/30 bg-gold/5 p-5 text-sm text-gold-bright">
-          By submitting, you confirm the interview will be conducted by you,
-          in one continuous session, without assistance from another AI tool
-          or person. Attempts to bypass this are treated as grounds for
-          rejection.
+          By submitting, you confirm the interview will be conducted by you, in
+          one continuous session, without assistance from another AI tool or
+          person. Attempts to bypass this are treated as grounds for rejection.
         </div>
 
         {authEnabled && !user && (
           <p className="mt-6 flex items-start gap-2 rounded-xl border border-ink-3 bg-ink-2/60 px-5 py-4 text-xs text-steel">
             <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
             <span>
-              You&apos;re submitting without an account, so this application will
-              only be visible in this browser.{" "}
-              <Link href="/login" className="text-mist underline underline-offset-4 hover:text-gold-bright">
+              You&apos;re submitting without an account, so this application
+              will only be visible in this browser.{" "}
+              <Link
+                href="/login"
+                className="text-mist underline underline-offset-4 hover:text-gold-bright"
+              >
                 Sign in first
               </Link>{" "}
               if you want to track it from any device.

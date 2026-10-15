@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FileDown, Loader2, AlertCircle, CheckCircle2, RefreshCcw } from "lucide-react";
+import {
+  FileDown,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  RefreshCcw,
+} from "lucide-react";
 import { generateDemoDocument } from "@/lib/demo-documents";
+import type { OfferLetter } from "@/lib/offers";
 
 export interface ReadyDoc {
   name: string;
@@ -24,12 +31,14 @@ export function DocumentDownloader({
   fullName,
   countryName,
   visaTypeName,
+  offer,
   onReady,
 }: {
   label: string;
   fullName?: string;
   countryName?: string;
   visaTypeName?: string;
+  offer?: OfferLetter;
   onReady: (doc: ReadyDoc) => void;
 }) {
   const [status, setStatus] = useState<Status>("idle");
@@ -47,7 +56,8 @@ export function DocumentDownloader({
         label,
         fullName,
         countryName || "the destination country",
-        visaTypeName || ""
+        visaTypeName || "",
+        offer,
       );
       blobRef.current = blob;
       setFileName(name);
@@ -55,7 +65,11 @@ export function DocumentDownloader({
       onReady({ name: label, url: URL.createObjectURL(blob), isSample: true });
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Could not generate this document.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not generate this document.",
+      );
     }
   }
 
@@ -85,12 +99,16 @@ export function DocumentDownloader({
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--foreground)]">{label}</p>
         {status === "ready" && <CheckCircle2 className="h-4 w-4 text-gold" />}
-        {status === "generating" && <Loader2 className="h-4 w-4 animate-spin text-mist" />}
+        {status === "generating" && (
+          <Loader2 className="h-4 w-4 animate-spin text-mist" />
+        )}
         {status === "error" && <AlertCircle className="h-4 w-4 text-red-400" />}
       </div>
 
       {status === "generating" && (
-        <p className="mt-3 text-xs text-mist">AI generating your sample document…</p>
+        <p className="mt-3 text-xs text-mist">
+          AI is creating & uploading this document…
+        </p>
       )}
 
       {status === "ready" && (
@@ -98,7 +116,7 @@ export function DocumentDownloader({
           <div className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-ink-3 bg-ink-3/30 px-3 py-2">
             <span className="truncate text-xs text-mist">{fileName}</span>
             <span className="shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-medium text-gold">
-              Auto-cleared
+              Auto-uploaded
             </span>
           </div>
 
